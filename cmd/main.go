@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/balantrea/todo-app"
@@ -10,16 +9,19 @@ import (
 	"github.com/balantrea/todo-app/pkg/service"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 func main() {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
+
 	if err := initConfig(); err != nil {
-		log.Fatalf("error initializing configs: %s", err)
+		logrus.Fatalf("error initializing configs: %s", err)
 	}
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading env variables: %v", err)
+		logrus.Fatalf("error loading env variables: %v", err)
 	}
 
 	db, err := repository.NewPostgresDB(repository.Config{
@@ -32,7 +34,7 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatalf("failed to initialized db: %v", err)
+		logrus.Fatalf("failed to initialized db: %v", err)
 	}
 
 	repos := repository.NewRepository(db)
@@ -41,7 +43,7 @@ func main() {
 
 	srv := new(todo.Server)
 	if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
-		log.Fatalf("error occurred while running http server: %s\n", err.Error())
+		logrus.Fatalf("error occurred while running http server: %s\n", err.Error())
 	}
 }
 
