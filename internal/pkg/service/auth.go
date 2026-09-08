@@ -3,15 +3,28 @@ package service
 import (
 	"crypto/sha1"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/balantrea/todo-app"
 	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/rs/zerolog"
 )
 
-const salt = "124urhndajshmdxjasdbkjh12t5iasbdkj"
+const (
+	salt     = "124urhndajshmdxjasdbkjh12t5iasbdkj"
+	tokenTTL = 12 * time.Hour
+)
 
 type AuthService struct {
-	repo repository.Authorization
+	repo   repository.Authorization
+	logger zerolog.Logger
+}
+
+type tokenClaims struct {
+	jwt.RegisteredClaims
+	UserId int `json:"user_id"`
 }
 
 func NewAuthService(repo repository.Authorization) *AuthService {
@@ -21,6 +34,28 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 func (s *AuthService) CreateUser(user todo.User) (int, error) {
 	user.Password = generatePasswordHash(user.Password)
 	return s.repo.CreateUser(user)
+}
+
+func (s *AuthService) GenerateToken(username, password string) (string, error) {
+	user, err := s.repo.GetUser(username, generatePasswordHash(password))
+	if err != nil {
+		return "", err
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+		jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenTTL)),
+		},
+		user.Id,
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("signingKey")))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func generatePasswordHash(password string) string {
