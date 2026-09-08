@@ -2,7 +2,8 @@ package service
 
 import (
 	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/pkg/repository"
+	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/rs/zerolog"
 )
 
 type Authorization interface {
@@ -19,10 +20,12 @@ type Service struct {
 	Authorization
 	TodoList
 	TodoItem
+	logger zerolog.Logger
 }
 
-func NewService(repos *repository.Repository) *Service {
+func NewService(repos *repository.Repository, logger zerolog.Logger) *Service {
 	return &Service{
+		logger:        logger,
 		Authorization: NewAuthService(repos.Authorization),
 	}
 }

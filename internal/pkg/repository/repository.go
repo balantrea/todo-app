@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/balantrea/todo-app"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
 type Authorization interface {
@@ -19,10 +20,12 @@ type Repository struct {
 	Authorization
 	TodoList
 	TodoItem
+	logger zerolog.Logger
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB, logger zerolog.Logger) *Repository {
 	return &Repository{
 		Authorization: NewAuthPostgres(db),
+		logger:        logger,
 	}
 }

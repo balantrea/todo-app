@@ -1,17 +1,20 @@
 package handler
 
 import (
-	"github.com/balantrea/todo-app/pkg/service"
+	"github.com/balantrea/todo-app/internal/pkg/service"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 type Handler struct {
 	service *service.Service
+	logger  zerolog.Logger
 }
 
-func NewHandler(service *service.Service) *Handler {
+func NewHandler(service *service.Service, logger zerolog.Logger) *Handler {
 	return &Handler{
 		service: service,
+		logger:  logger,
 	}
 }
 

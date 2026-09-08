@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/pkg/repository"
+	"github.com/balantrea/todo-app/internal/pkg/repository"
 )
 
 const salt = "124urhndajshmdxjasdbkjh12t5iasbdkj"

@@ -2,13 +2,19 @@ package todo
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type Server struct {
 	httpServer *http.Server
+	logger     zerolog.Logger
+}
+
+func NewServer(logger zerolog.Logger) *Server {
+	return &Server{logger: logger}
 }
 
 func (s *Server) Run(port string, handler http.Handler) error {
@@ -20,7 +26,9 @@ func (s *Server) Run(port string, handler http.Handler) error {
 		WriteTimeout:   10 * time.Second,
 	}
 
-	fmt.Printf("the server is running and working on port: %s\n", port)
+	s.logger.Info().
+		Msgf("the server is running and working on port: %s\n", port)
+
 	return s.httpServer.ListenAndServe()
 }
 

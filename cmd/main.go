@@ -4,24 +4,31 @@ import (
 	"os"
 
 	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/pkg/handler"
-	"github.com/balantrea/todo-app/pkg/repository"
-	"github.com/balantrea/todo-app/pkg/service"
+	"github.com/balantrea/todo-app/internal/pkg/handler"
+	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/balantrea/todo-app/internal/pkg/service"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
 func main() {
-	logrus.SetFormatter(new(logrus.JSONFormatter))
+	logger := zerolog.New(os.Stdout).
+		With().
+		Timestamp().
+		Logger()
 
 	if err := initConfig(); err != nil {
-		logrus.Fatalf("error initializing configs: %s", err)
+		logger.Err(err).
+			Msg("error initializing configs")
+		return
 	}
 
 	if err := godotenv.Load(); err != nil {
-		logrus.Fatalf("error loading env variables: %v", err)
+		logger.Err(err).
+			Msg("loading env variables")
+		return
 	}
 
 	db, err := repository.NewPostgresDB(repository.Config{
@@ -34,16 +41,20 @@ func main() {
 	})
 
 	if err != nil {
-		logrus.Fatalf("failed to initialized db: %v", err)
+		logger.Err(err).
+			Msg("failed to initialize db")
+		return
 	}
 
-	repos := repository.NewRepository(db)
-	services := service.NewService(repos)
-	handlers := handler.NewHandler(services)
+	repos := repository.NewRepository(db, logger)
+	services := service.NewService(repos, logger)
+	handlers := handler.NewHandler(services, logger)
 
-	srv := new(todo.Server)
+	srv := todo.NewServer(logger)
 	if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
-		logrus.Fatalf("error occurred while running http server: %s\n", err.Error())
+		logger.Err(err).
+			Msg("error occurred while running http server")
+		return
 	}
 }
 
