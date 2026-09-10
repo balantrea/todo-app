@@ -27,7 +27,7 @@ func (s *Server) Run(port string, handler http.Handler) error {
 	}
 
 	s.logger.Info().
-		Msgf("the server is running and working on port: %s\n", port)
+		Msgf("the server is running and working on port: %s", port)
 
 	return s.httpServer.ListenAndServe()
 }
