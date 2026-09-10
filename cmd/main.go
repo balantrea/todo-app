@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/balantrea/todo-app"
@@ -19,16 +20,20 @@ func main() {
 		Timestamp().
 		Logger()
 
-	if err := initConfig(); err != nil {
+	if err := run(logger); err != nil {
 		logger.Err(err).
-			Msg("error initializing configs")
+			Msg("todo app is terminated")
 		return
+	}
+}
+
+func run(logger zerolog.Logger) error {
+	if err := initConfig(); err != nil {
+		return fmt.Errorf("initialize config: %w", err)
 	}
 
 	if err := godotenv.Load(); err != nil {
-		logger.Err(err).
-			Msg("loading env variables")
-		return
+		return fmt.Errorf("load environment variables: %w", err)
 	}
 
 	db, err := repository.NewPostgresDB(repository.Config{
@@ -38,12 +43,12 @@ func main() {
 		Password: os.Getenv("DB_PASSWORD"),
 		DBName:   viper.GetString("db.dbname"),
 		SSLMode:  viper.GetString("db.sslmode"),
-	})
+	},
+		logger,
+	)
 
 	if err != nil {
-		logger.Err(err).
-			Msg("failed to initialize db")
-		return
+		return fmt.Errorf("initialize database: %w", err)
 	}
 
 	repos := repository.NewRepository(db, logger)
@@ -52,10 +57,10 @@ func main() {
 
 	srv := todo.NewServer(logger)
 	if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
-		logger.Err(err).
-			Msg("error occurred while running http server")
-		return
+		return fmt.Errorf("run HTTP server: %w", err)
 	}
+
+	return nil
 }
 
 func initConfig() error {
