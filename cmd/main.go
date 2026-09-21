@@ -8,7 +8,6 @@ import (
 	"github.com/balantrea/todo-app/internal/pkg/handler"
 	"github.com/balantrea/todo-app/internal/pkg/repository"
 	"github.com/balantrea/todo-app/internal/pkg/service"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -32,18 +31,18 @@ func run(logger zerolog.Logger) error {
 		return fmt.Errorf("initialize config: %w", err)
 	}
 
-	if err := godotenv.Load(); err != nil {
-		logger.Warn().
-			Err(err).
-			Msg("failed to load .env file")
-	}
+	//if err := godotenv.Load(); err != nil {
+	//	logger.Warn().
+	//		Err(err).
+	//		Msg("failed to load .env file")
+	//}
 
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
+		Username: os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   viper.GetString("db.dbname"),
+		DBName:   os.Getenv("DB_NAME"),
 		SSLMode:  viper.GetString("db.sslmode"),
 	},
 		logger,
