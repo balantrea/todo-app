@@ -33,7 +33,9 @@ func run(logger zerolog.Logger) error {
 	}
 
 	if err := godotenv.Load(); err != nil {
-		return fmt.Errorf("load environment variables: %w", err)
+		logger.Warn().
+			Err(err).
+			Msg("failed to load .env file")
 	}
 
 	db, err := repository.NewPostgresDB(repository.Config{
