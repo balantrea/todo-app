@@ -78,3 +78,19 @@ func (r *TodoListPostgres) GetById(userId, listId int) (todo.TodoList, error) {
 
 	return list, nil
 }
+
+func (r *TodoListPostgres) UpdateList(userId, listId int) (int, error) {
+	return 0, nil
+}
+
+func (r *TodoListPostgres) DeleteList(userId, listId int) error {
+	query := fmt.Sprintf("DELETE FROM %s tl USING %s ul WHERE tl.id = ul.list_id AND ul.id=$1 AND ul.list_id=$2",
+		todoListTable, userListsTable)
+
+	_, err := r.db.Exec(query, userId, listId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
