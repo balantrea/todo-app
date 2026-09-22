@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/balantrea/todo-app"
 	"github.com/balantrea/todo-app/internal/pkg/handler"
@@ -51,9 +55,41 @@ func run(logger zerolog.Logger) error {
 	handlers := handler.NewHandler(services, logger)
 
 	srv := todo.NewServer(logger)
-	if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
-		return fmt.Errorf("run HTTP server: %w", err)
+	go func() {
+		if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
+			logger.Err(err).
+				Msg("error occurred while running HTTP server")
+		}
+	}()
+
+	logger.Info().
+		Msgf("TodoApp Started in port: %s", viper.GetString("port"))
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logger.Info().
+		Msg("TodoApp Shutting Down")
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("error occurred on server shutting down")
 	}
+
+	if err := db.Close(); err != nil {
+		logger.Err(err).
+			Msg("error occurred on db connection close")
+	}
+
+	return nil
 
 	return nil
 }
