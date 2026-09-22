@@ -31,12 +31,6 @@ func run(logger zerolog.Logger) error {
 		return fmt.Errorf("initialize config: %w", err)
 	}
 
-	//if err := godotenv.Load(); err != nil {
-	//	logger.Warn().
-	//		Err(err).
-	//		Msg("failed to load .env file")
-	//}
-
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
