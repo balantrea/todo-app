@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/balantrea/todo-app"
 	"github.com/jmoiron/sqlx"
@@ -96,6 +97,44 @@ func (r *TodoItemRepository) GetById(userId, itemId int) (todo.TodoItem, error) 
 	}
 
 	return list, nil
+}
+
+func (r *TodoItemRepository) Update(userId, itemId int, input todo.UpdateItemInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argsId := 1
+
+	if input.Title != nil {
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argsId))
+		args = append(args, *input.Title)
+		argsId++
+	}
+
+	if input.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argsId))
+		args = append(args, *input.Description)
+		argsId++
+	}
+
+	if input.Done != nil {
+		setValues = append(setValues, fmt.Sprintf("done=$%d", argsId))
+		args = append(args, *input.Done)
+		argsId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf(`UPDATE %s ti SET %s FROM %s li, %s ul
+									WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $%d AND ti.id = $%d`,
+		todoItemsTable, setQuery, listItemTable, userListsTable, argsId, argsId+1)
+
+	args = append(args, userId, itemId)
+
+	if _, err := r.db.Exec(query, args...); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *TodoItemRepository) Delete(userId, itemId int) error {
