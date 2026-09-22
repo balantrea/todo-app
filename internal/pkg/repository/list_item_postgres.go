@@ -70,3 +70,42 @@ func (r *TodoItemRepository) GetAll(listId, userId int) ([]todo.TodoItem, error)
 
 	return lists, nil
 }
+
+func (r *TodoItemRepository) GetById(userId, itemId int) (todo.TodoItem, error) {
+	var list todo.TodoItem
+
+	query := fmt.Sprintf(`
+        SELECT
+            ti.id,
+            ti.title,
+            ti.description,
+            ti.done
+        FROM %s ti
+        INNER JOIN %s li ON li.item_id = ti.id
+        INNER JOIN %s ul ON ul.list_id = li.list_id
+        WHERE ti.id = $1
+          AND ul.user_id = $2
+    `,
+		todoItemsTable,
+		listItemTable,
+		userListsTable,
+	)
+
+	if err := r.db.Get(&list, query, itemId, userId); err != nil {
+		return list, err
+	}
+
+	return list, nil
+}
+
+func (r *TodoItemRepository) Delete(userId, itemId int) error {
+	query := fmt.Sprintf(`DELETE FROM %s ti USING %s li, %s ul 
+									WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $1 AND ti.id = $2`,
+		todoItemsTable, listItemTable, userListsTable)
+	_, err := r.db.Exec(query, userId, itemId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

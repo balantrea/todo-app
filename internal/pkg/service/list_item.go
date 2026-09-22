@@ -24,10 +24,13 @@ func (s *TodoItemService) Create(userId, listId int, item todo.TodoItem) (int, e
 }
 
 func (s *TodoItemService) GetAll(userId, listId int) ([]todo.TodoItem, error) {
-	_, err := s.listRepo.GetById(userId, listId)
-	if err != nil {
-		return nil, err
-	}
-
 	return s.repo.GetAll(listId, userId)
+}
+
+func (s *TodoItemService) GetById(userId, itemId int) (todo.TodoItem, error) {
+	return s.repo.GetById(userId, itemId)
+}
+
+func (s *TodoItemService) Delete(userId, itemId int) error {
+	return s.repo.Delete(userId, itemId)
 }
