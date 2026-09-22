@@ -90,8 +90,6 @@ func run(logger zerolog.Logger) error {
 	}
 
 	return nil
-
-	return nil
 }
 
 func initConfig() error {
