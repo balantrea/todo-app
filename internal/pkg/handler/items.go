@@ -38,7 +38,28 @@ func (h *Handler) createItems(c *gin.Context) {
 	})
 }
 
-func (h *Handler) getAllItems(c *gin.Context) {}
+type GetAllItemsResponse struct {
+	Data []todo.TodoItem `json:"data"`
+}
+
+func (h *Handler) getAllItems(c *gin.Context) {
+	userId, err := h.getUserId(c)
+	if err != nil {
+		return
+	}
+
+	listId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	items, err := h.service.TodoItem.GetAll(userId, listId)
+
+	c.JSON(http.StatusOK, GetAllItemsResponse{
+		Data: items,
+	})
+}
 
 func (h *Handler) getItemsById(c *gin.Context) {}
 

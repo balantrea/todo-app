@@ -56,3 +56,24 @@ func (r *TodoItemRepository) Create(listId int, item todo.TodoItem) (int, error)
 
 	return itemId, nil
 }
+
+func (r *TodoItemRepository) GetAll(listId int) ([]todo.TodoItem, error) {
+	var lists []todo.TodoItem
+
+	query := fmt.Sprintf(`
+        SELECT
+            ti.id,
+            ti.title,
+            ti.description,
+            ti.done
+        FROM %s ti
+        INNER JOIN %s li ON ti.id = li.item_id
+        WHERE li.list_id = $1
+    `, todoItemsTable, listItemTable)
+
+	if err := r.db.Select(&lists, query, listId); err != nil {
+		return nil, err
+	}
+
+	return lists, nil
+}
