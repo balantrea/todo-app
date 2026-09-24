@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 
+	"github.com/balantrea/todo-app/internal/config"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
@@ -15,16 +16,7 @@ const (
 	todoItemsTable = "todo_items"
 )
 
-type Config struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	DBName   string
-	SSLMode  string
-}
-
-func NewPostgresDB(cfg Config, logger zerolog.Logger) (*sqlx.DB, error) {
+func NewPostgresDB(cfg config.DB, logger zerolog.Logger) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
 		cfg.Host,

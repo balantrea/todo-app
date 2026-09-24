@@ -6,14 +6,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/balantrea/todo-app/internal/model"
+	"github.com/balantrea/todo-app/internal/repository"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog"
 )
 
+var signingKey = os.Getenv("SIGNING_KEY")
+var salt = os.Getenv("SALT")
+
 const (
-	salt     = "124urhndajshmdxjasdbkjh12t5iasbdkj"
 	tokenTTL = 12 * time.Hour
 )
 
@@ -31,7 +33,7 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) CreateUser(user todo.User) (int, error) {
+func (s *AuthService) CreateUser(user model.User) (int, error) {
 	user.Password = generatePasswordHash(user.Password)
 	return s.repo.CreateUser(user)
 }
@@ -50,7 +52,7 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 		user.Id,
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("SIGNING_KEY")))
+	tokenString, err := token.SignedString([]byte(signingKey))
 	if err != nil {
 		return "", err
 	}
@@ -63,8 +65,7 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid signing method")
 		}
-
-		return []byte(os.Getenv("SIGNING_KEY")), nil
+		return []byte(signingKey), nil
 	})
 
 	if err != nil {

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/balantrea/todo-app/internal/pkg/service"
+	"github.com/balantrea/todo-app/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )

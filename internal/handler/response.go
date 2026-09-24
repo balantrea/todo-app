@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 )
 
 type err struct {
@@ -13,8 +13,9 @@ type StatusResponse struct {
 	Status string `json:"status"`
 }
 
-func newErrorResponse(c *gin.Context, statusCode int, message string) {
-	logrus.Error(message)
+func newErrorResponse(c *gin.Context, statusCode int, message string, logger zerolog.Logger) {
+	logger.Info().
+		Msg(message)
 
 	c.AbortWithStatusJSON(statusCode, err{message})
 }

@@ -8,10 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/internal/pkg/handler"
-	"github.com/balantrea/todo-app/internal/pkg/repository"
-	"github.com/balantrea/todo-app/internal/pkg/service"
+	"github.com/balantrea/todo-app/internal/config"
+	"github.com/balantrea/todo-app/internal/handler"
+	"github.com/balantrea/todo-app/internal/repository"
+	"github.com/balantrea/todo-app/internal/server"
+	"github.com/balantrea/todo-app/internal/service"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -35,13 +36,13 @@ func run(logger zerolog.Logger) error {
 		return fmt.Errorf("initialize config: %w", err)
 	}
 
-	db, err := repository.NewPostgresDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
+	db, err := repository.NewPostgresDB(config.DB{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
 		Username: os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
 		DBName:   os.Getenv("DB_NAME"),
-		SSLMode:  viper.GetString("db.sslmode"),
+		SSLMode:  os.Getenv("SSLMODE"),
 	},
 		logger,
 	)
@@ -54,9 +55,9 @@ func run(logger zerolog.Logger) error {
 	services := service.NewService(repos, logger)
 	handlers := handler.NewHandler(services, logger)
 
-	srv := todo.NewServer(logger)
+	srv := server.NewServer(logger)
 	go func() {
-		if err := srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
+		if err = srv.Run(viper.GetString("port"), handlers.InitRouters()); err != nil {
 			logger.Err(err).
 				Msg("error occurred while running HTTP server")
 		}
@@ -74,17 +75,17 @@ func run(logger zerolog.Logger) error {
 
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		5*time.Second,
+		10*time.Second,
 	)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err = srv.Shutdown(ctx); err != nil {
 		logger.Error().
 			Err(err).
 			Msg("error occurred on server shutting down")
 	}
 
-	if err := db.Close(); err != nil {
+	if err = db.Close(); err != nil {
 		logger.Err(err).
 			Msg("error occurred on db connection close")
 	}

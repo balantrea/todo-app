@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/balantrea/todo-app"
+	"github.com/balantrea/todo-app/internal/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 )
@@ -18,7 +18,7 @@ func NewTodoItemRepository(db *sqlx.DB, logger zerolog.Logger) *TodoItemReposito
 	return &TodoItemRepository{db: db, logger: logger}
 }
 
-func (r *TodoItemRepository) Create(listId int, item todo.TodoItem) (int, error) {
+func (r *TodoItemRepository) Create(listId int, item model.TodoItem) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err
@@ -26,12 +26,14 @@ func (r *TodoItemRepository) Create(listId int, item todo.TodoItem) (int, error)
 
 	var itemId int
 
-	createItemQuery := fmt.Sprintf("INSERT INTO %s (title, description) values ($1, $2) RETURNING id",
+	createItemQuery := fmt.Sprintf(`
+INSERT INTO %s (title, description) 
+VALUES ($1, $2) RETURNING id`,
 		todoItemsTable)
 
 	row := tx.QueryRow(createItemQuery, item.Title, item.Description)
 
-	if err := row.Scan(&itemId); err != nil {
+	if err = row.Scan(&itemId); err != nil {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			r.logger.Err(rollbackErr).
 				Msg("failed to create item")
@@ -39,7 +41,9 @@ func (r *TodoItemRepository) Create(listId int, item todo.TodoItem) (int, error)
 		return 0, err
 	}
 
-	createListItemQuery := fmt.Sprintf("INSERT INTO %s (list_id, item_id) values ($1, $2)",
+	createListItemQuery := fmt.Sprintf(`
+INSERT INTO %s (list_id, item_id) 
+VALUES ($1, $2)`,
 		listItemTable)
 
 	_, err = tx.Exec(createListItemQuery, listId, itemId)
@@ -58,11 +62,15 @@ func (r *TodoItemRepository) Create(listId int, item todo.TodoItem) (int, error)
 	return itemId, nil
 }
 
-func (r *TodoItemRepository) GetAll(listId, userId int) ([]todo.TodoItem, error) {
-	var lists []todo.TodoItem
+func (r *TodoItemRepository) GetAll(listId, userId int) ([]model.TodoItem, error) {
+	var lists []model.TodoItem
 
-	query := fmt.Sprintf(`SELECT ti.id, ti.title, ti.description, ti.done FROM %s ti INNER JOIN %s li on li.item_id = ti.id
-									INNER JOIN %s ul on ul.list_id = li.list_id WHERE li.list_id = $1 AND ul.user_id = $2`,
+	query := fmt.Sprintf(`
+SELECT ti.id, ti.title, ti.description, ti.done 
+FROM %s ti 
+INNER JOIN %s li on li.item_id = ti.id
+INNER JOIN %s ul on ul.list_id = li.list_id 
+WHERE li.list_id = $1 AND ul.user_id = $2`,
 		todoItemsTable, listItemTable, userListsTable)
 
 	if err := r.db.Select(&lists, query, listId, userId); err != nil {
@@ -72,25 +80,20 @@ func (r *TodoItemRepository) GetAll(listId, userId int) ([]todo.TodoItem, error)
 	return lists, nil
 }
 
-func (r *TodoItemRepository) GetById(userId, itemId int) (todo.TodoItem, error) {
-	var list todo.TodoItem
+func (r *TodoItemRepository) GetById(userId, itemId int) (model.TodoItem, error) {
+	var list model.TodoItem
 
 	query := fmt.Sprintf(`
-        SELECT
-            ti.id,
-            ti.title,
-            ti.description,
-            ti.done
-        FROM %s ti
-        INNER JOIN %s li ON li.item_id = ti.id
-        INNER JOIN %s ul ON ul.list_id = li.list_id
-        WHERE ti.id = $1
-          AND ul.user_id = $2
-    `,
-		todoItemsTable,
-		listItemTable,
-		userListsTable,
-	)
+SELECT
+    ti.id,
+    ti.title,
+    ti.description,
+    ti.done
+FROM %s ti
+INNER JOIN %s li ON li.item_id = ti.id
+INNER JOIN %s ul ON ul.list_id = li.list_id
+WHERE ti.id = $1 AND ul.user_id = $2`,
+		todoItemsTable, listItemTable, userListsTable)
 
 	if err := r.db.Get(&list, query, itemId, userId); err != nil {
 		return list, err
@@ -99,7 +102,7 @@ func (r *TodoItemRepository) GetById(userId, itemId int) (todo.TodoItem, error) 
 	return list, nil
 }
 
-func (r *TodoItemRepository) Update(userId, itemId int, input todo.UpdateItemInput) error {
+func (r *TodoItemRepository) Update(userId, itemId int, input model.UpdateItemInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argsId := 1
@@ -124,8 +127,9 @@ func (r *TodoItemRepository) Update(userId, itemId int, input todo.UpdateItemInp
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf(`UPDATE %s ti SET %s FROM %s li, %s ul
-									WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $%d AND ti.id = $%d`,
+	query := fmt.Sprintf(`
+UPDATE %s ti SET %s FROM %s li, %s ul
+WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $%d AND ti.id = $%d`,
 		todoItemsTable, setQuery, listItemTable, userListsTable, argsId, argsId+1)
 
 	args = append(args, userId, itemId)
@@ -138,9 +142,11 @@ func (r *TodoItemRepository) Update(userId, itemId int, input todo.UpdateItemInp
 }
 
 func (r *TodoItemRepository) Delete(userId, itemId int) error {
-	query := fmt.Sprintf(`DELETE FROM %s ti USING %s li, %s ul 
-									WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $1 AND ti.id = $2`,
+	query := fmt.Sprintf(`
+DELETE FROM %s ti USING %s li, %s ul 
+WHERE ti.id = li.item_id AND li.list_id = ul.list_id AND ul.user_id = $1 AND ti.id = $2`,
 		todoItemsTable, listItemTable, userListsTable)
+
 	_, err := r.db.Exec(query, userId, itemId)
 	if err != nil {
 		return err

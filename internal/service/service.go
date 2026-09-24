@@ -1,30 +1,30 @@
 package service
 
 import (
-	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/balantrea/todo-app/internal/model"
+	"github.com/balantrea/todo-app/internal/repository"
 	"github.com/rs/zerolog"
 )
 
 type Authorization interface {
-	CreateUser(user todo.User) (int, error)
+	CreateUser(user model.User) (int, error)
 	GenerateToken(username, password string) (string, error)
 	ParseToken(token string) (int, error)
 }
 
 type TodoList interface {
-	Create(userId int, list todo.TodoList) (int, error)
-	GetAll(userId int) ([]todo.TodoList, error)
-	GetById(userId, listId int) (todo.TodoList, error)
-	UpdateList(userId, listId int, input todo.UpdateListInput) error
+	Create(userId int, list model.TodoList) (int, error)
+	GetAll(userId int) ([]model.TodoList, error)
+	GetById(userId, listId int) (model.TodoList, error)
+	UpdateList(userId, listId int, input model.UpdateListInput) error
 	DeleteList(userId, listId int) error
 }
 
 type TodoItem interface {
-	Create(userId, listId int, item todo.TodoItem) (int, error)
-	GetAll(userId, listId int) ([]todo.TodoItem, error)
-	GetById(userId, itemId int) (todo.TodoItem, error)
-	Update(userId, itemId int, input todo.UpdateItemInput) error
+	Create(userId, listId int, item model.TodoItem) (int, error)
+	GetAll(userId, listId int) ([]model.TodoItem, error)
+	GetById(userId, itemId int) (model.TodoItem, error)
+	Update(userId, itemId int, input model.UpdateItemInput) error
 	Delete(userId, itemId int) error
 }
 

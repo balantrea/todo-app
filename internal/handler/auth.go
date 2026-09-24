@@ -3,21 +3,21 @@ package handler
 import (
 	"net/http"
 
-	"github.com/balantrea/todo-app"
+	"github.com/balantrea/todo-app/internal/model"
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) singUP(c *gin.Context) {
-	var input todo.User
+	var input model.User
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
 		return
 	}
 
 	id, err := h.service.Authorization.CreateUser(input)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
 		return
 	}
 
@@ -35,13 +35,13 @@ func (h *Handler) singIn(c *gin.Context) {
 	var input singInInput
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
 		return
 	}
 
 	token, err := h.service.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
 		return
 	}
 

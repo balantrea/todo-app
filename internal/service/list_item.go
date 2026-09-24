@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/balantrea/todo-app"
-	"github.com/balantrea/todo-app/internal/pkg/repository"
+	"github.com/balantrea/todo-app/internal/model"
+	"github.com/balantrea/todo-app/internal/repository"
 )
 
 type TodoItemService struct {
@@ -14,24 +14,23 @@ func NewTodoItemService(repo repository.TodoItem, listRepo repository.TodoList) 
 	return &TodoItemService{repo: repo, listRepo: listRepo}
 }
 
-func (s *TodoItemService) Create(userId, listId int, item todo.TodoItem) (int, error) {
-	_, err := s.listRepo.GetById(userId, listId)
-	if err != nil {
+func (s *TodoItemService) Create(userId, listId int, item model.TodoItem) (int, error) {
+	if _, err := s.listRepo.GetById(userId, listId); err != nil {
 		return 0, err
 	}
 
 	return s.repo.Create(listId, item)
 }
 
-func (s *TodoItemService) GetAll(userId, listId int) ([]todo.TodoItem, error) {
+func (s *TodoItemService) GetAll(userId, listId int) ([]model.TodoItem, error) {
 	return s.repo.GetAll(listId, userId)
 }
 
-func (s *TodoItemService) GetById(userId, itemId int) (todo.TodoItem, error) {
+func (s *TodoItemService) GetById(userId, itemId int) (model.TodoItem, error) {
 	return s.repo.GetById(userId, itemId)
 }
 
-func (s *TodoItemService) Update(userId, itemId int, input todo.UpdateItemInput) error {
+func (s *TodoItemService) Update(userId, itemId int, input model.UpdateItemInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}
