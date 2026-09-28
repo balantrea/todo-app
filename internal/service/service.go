@@ -32,7 +32,6 @@ type Service struct {
 	Authorization
 	TodoList
 	TodoItem
-	logger zerolog.Logger
 }
 
 func NewService(repos *repository.Repository, logger zerolog.Logger) *Service {
@@ -40,6 +39,5 @@ func NewService(repos *repository.Repository, logger zerolog.Logger) *Service {
 		Authorization: NewAuthService(repos.Authorization),
 		TodoList:      NewTodoListService(repos.TodoList, logger),
 		TodoItem:      NewTodoItemService(repos.TodoItem, repos.TodoList),
-		logger:        logger,
 	}
 }

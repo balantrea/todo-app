@@ -31,7 +31,6 @@ type Repository struct {
 	Authorization
 	TodoList
 	TodoItem
-	logger zerolog.Logger
 }
 
 func NewRepository(db *sqlx.DB, logger zerolog.Logger) *Repository {
@@ -39,6 +38,5 @@ func NewRepository(db *sqlx.DB, logger zerolog.Logger) *Repository {
 		Authorization: NewAuthPostgres(db),
 		TodoList:      NewTodoListPostgres(db, logger),
 		TodoItem:      NewTodoItemRepository(db, logger),
-		logger:        logger,
 	}
 }
