@@ -11,13 +11,13 @@ func (h *Handler) singUP(c *gin.Context) {
 	var input model.User
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidInputBody, h.logger)
 		return
 	}
 
 	id, err := h.service.Authorization.CreateUser(input)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, errFailedToCreateUser, h.logger)
 		return
 	}
 
@@ -26,22 +26,17 @@ func (h *Handler) singUP(c *gin.Context) {
 	})
 }
 
-type singInInput struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func (h *Handler) singIn(c *gin.Context) {
-	var input singInInput
+	var input model.SingInInput
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidInputBody, h.logger)
 		return
 	}
 
 	token, err := h.service.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 

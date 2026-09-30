@@ -28,3 +28,8 @@ func (i *UpdateItemInput) Validate() error {
 
 	return nil
 }
+
+type SingInInput struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}

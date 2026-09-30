@@ -16,20 +16,20 @@ func (h *Handler) createItems(c *gin.Context) {
 
 	listId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param", h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidIDParam, h.logger)
 		return
 	}
 
 	var input model.TodoItem
 
 	if err = c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusBadRequest, err, h.logger)
 		return
 	}
 
 	id, err := h.service.TodoItem.Create(userId, listId, input)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 
@@ -50,13 +50,13 @@ func (h *Handler) getAllItems(c *gin.Context) {
 
 	listId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param", h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidIDParam, h.logger)
 		return
 	}
 
 	items, err := h.service.TodoItem.GetAll(userId, listId)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 
@@ -73,13 +73,13 @@ func (h *Handler) getItemsById(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param", h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidIDParam, h.logger)
 		return
 	}
 
 	item, err := h.service.TodoItem.GetById(userId, id)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 
@@ -94,20 +94,20 @@ func (h *Handler) updateItems(c *gin.Context) {
 
 	itemId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param", h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidIDParam, h.logger)
 		return
 	}
 
 	var input model.UpdateItemInput
 
 	if err = c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusBadRequest, err, h.logger)
 		return
 	}
 
 	err = h.service.Update(userId, itemId, input)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 
@@ -124,12 +124,12 @@ func (h *Handler) deleteItems(c *gin.Context) {
 
 	itemId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param", h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidIDParam, h.logger)
 		return
 	}
 
-	if err := h.service.TodoItem.Delete(userId, itemId); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error(), h.logger)
+	if err = h.service.TodoItem.Delete(userId, itemId); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
 		return
 	}
 
