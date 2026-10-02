@@ -88,3 +88,59 @@ func TestHandler_userIdentity(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_getUserID(t *testing.T) {
+
+	testTable := []struct {
+		name                 string
+		setupContext         func(c *gin.Context)
+		expectedID           int
+		expectedStatusCode   int
+		expectedResponseBody string
+	}{
+		{
+			name: "OK",
+			setupContext: func(c *gin.Context) {
+				c.Set(userCtx, 1)
+			},
+			expectedID:           1,
+			expectedStatusCode:   200,
+			expectedResponseBody: ``,
+		},
+		{
+			name:                 "user ID is not found",
+			setupContext:         func(c *gin.Context) {},
+			expectedID:           0,
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"user is not found"}`,
+		},
+		{
+			name: "failed to assert user id",
+			setupContext: func(c *gin.Context) {
+				c.Set(userCtx, "1")
+			},
+			expectedID:           0,
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"user is not found"}`,
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			handler := &Handler{
+				logger: logger,
+			}
+
+			testCase.setupContext(c)
+
+			id, _ := handler.getUserId(c)
+
+			assert.Equal(t, testCase.expectedID, id)
+			assert.Equal(t, testCase.expectedStatusCode, w.Code)
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+		})
+	}
+}
