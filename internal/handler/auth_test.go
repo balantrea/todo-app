@@ -81,7 +81,7 @@ func TestHandler_signUp(t *testing.T) {
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/sign-up", bytes.NewBufferString(testCase.inputBody))
 
-			// Perform request
+			// Perform Request
 			r.ServeHTTP(w, req)
 
 			// Assert

@@ -12,4 +12,5 @@ var (
 	errInvalidIDParam        = errors.New("invalid id param")
 	errFailedToCreateUser    = errors.New("failed to create user")
 	errFailedToGenerateToken = errors.New("failed to create token")
+	errInvalidToken          = errors.New("invalid token")
 )
