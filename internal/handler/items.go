@@ -56,7 +56,7 @@ func (h *Handler) getAllItems(c *gin.Context) {
 
 	items, err := h.service.TodoItem.GetAll(userId, listId)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, errFailedToGetAllItems, h.logger)
 		return
 	}
 
