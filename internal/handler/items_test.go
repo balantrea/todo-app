@@ -101,7 +101,6 @@ func TestItems_GetAll(t *testing.T) {
 	testTable := []struct {
 		name                 string
 		inputURL             string
-		inputBody            string
 		items                []model.TodoItem
 		mockBehavior         mockBehavior
 		expectedResponseCode int
@@ -157,6 +156,77 @@ func TestItems_GetAll(t *testing.T) {
 			r.GET("/api/list/:id/items/", func(c *gin.Context) {
 				c.Set("userId", 1)
 				handler.getAllItems(c)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", testCase.inputURL, nil)
+
+			r.ServeHTTP(w, req)
+
+			assert.Equal(t, testCase.expectedResponseCode, w.Code)
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+		})
+	}
+}
+
+func TestItems_GetByID(t *testing.T) {
+	type mockBehavior func(s *mock_service.MockTodoItem)
+
+	testTable := []struct {
+		name                 string
+		inputURL             string
+		mockBehavior         mockBehavior
+		expectedResponseCode int
+		expectedResponseBody string
+	}{
+		{
+			name:     "OK",
+			inputURL: "/api/items/1",
+			mockBehavior: func(s *mock_service.MockTodoItem) {
+				item := model.TodoItem{
+					Id:          1,
+					Title:       "Test",
+					Description: "Test",
+				}
+
+				s.EXPECT().GetById(1, 1).Return(item, nil)
+			},
+			expectedResponseCode: 200,
+			expectedResponseBody: `{"id":1,"title":"Test","description":"Test","done":false}`,
+		},
+		{
+			name:                 "invalid id param",
+			inputURL:             "/api/items/invalid",
+			mockBehavior:         func(s *mock_service.MockTodoItem) {},
+			expectedResponseCode: 400,
+			expectedResponseBody: `{"message":"invalid id param"}`,
+		},
+		{
+			name:     "failed to get items by id",
+			inputURL: "/api/items/1",
+			mockBehavior: func(s *mock_service.MockTodoItem) {
+				s.EXPECT().GetById(1, 1).Return(model.TodoItem{}, errFailedToGetItemsByID)
+			},
+			expectedResponseCode: 500,
+			expectedResponseBody: `{"message":"failed to get items by id"}`,
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			todoItems := mock_service.NewMockTodoItem(c)
+			testCase.mockBehavior(todoItems)
+
+			services := &service.Service{TodoItem: todoItems}
+			handler := NewHandler(services, logger)
+
+			r := gin.New()
+			r.GET("/api/items/:id", func(c *gin.Context) {
+				c.Set("userId", 1)
+				handler.getItemsById(c)
 			})
 
 			w := httptest.NewRecorder()

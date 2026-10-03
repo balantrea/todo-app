@@ -15,4 +15,5 @@ var (
 	errInvalidToken          = errors.New("invalid token")
 	errFailedToCreateItem    = errors.New("failed to create item")
 	errFailedToGetAllItems   = errors.New("failed to get all items")
+	errFailedToGetItemsByID  = errors.New("failed to get items by id")
 )
