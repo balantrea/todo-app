@@ -56,7 +56,7 @@ func TestHandler_signUp(t *testing.T) {
 				s.EXPECT().CreateUser(user).Return(0, errFailedToCreateUser)
 			},
 			expectedStatusCode:   500,
-			expectedResponseBody: `{"message":"failed to create item"}`,
+			expectedResponseBody: `{"message":"failed to create user"}`,
 		},
 	}
 

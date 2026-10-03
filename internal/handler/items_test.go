@@ -239,3 +239,89 @@ func TestItems_GetByID(t *testing.T) {
 		})
 	}
 }
+
+func TestItems_Update(t *testing.T) {
+	type mockBehavior func(s *mock_service.MockTodoItem, todoItem model.UpdateItemInput)
+
+	testTable := []struct {
+		name                 string
+		inputURL             string
+		inputBody            string
+		inputItem            model.UpdateItemInput
+		mockBehavior         mockBehavior
+		expectedResponseCode int
+		expectedResponseBody string
+	}{
+		{
+			name:      "OK",
+			inputURL:  "/api/items/1",
+			inputBody: `{"title":"Test","description":"Test"}`,
+			inputItem: model.UpdateItemInput{
+				Title:       new("Test"),
+				Description: new("Test"),
+			},
+			mockBehavior: func(s *mock_service.MockTodoItem, todoItem model.UpdateItemInput) {
+				s.EXPECT().Update(1, 1, todoItem).Return(nil)
+			},
+			expectedResponseCode: 200,
+			expectedResponseBody: `{"status":"ok"}`,
+		},
+		{
+			name:                 "invalid id param",
+			inputURL:             "/api/items/invalid",
+			mockBehavior:         func(s *mock_service.MockTodoItem, todoItem model.UpdateItemInput) {},
+			expectedResponseCode: 400,
+			expectedResponseBody: `{"message":"invalid id param"}`,
+		},
+		{
+			name:                 "invalid input",
+			inputURL:             "/api/items/1",
+			inputBody:            ``,
+			inputItem:            model.UpdateItemInput{},
+			mockBehavior:         func(s *mock_service.MockTodoItem, todoItem model.UpdateItemInput) {},
+			expectedResponseCode: 400,
+			expectedResponseBody: `{"message":"invalid input body"}`,
+		},
+		{
+			name:      "failed to update item",
+			inputURL:  "/api/items/1",
+			inputBody: `{"title":"Test","description":"Test"}`,
+			inputItem: model.UpdateItemInput{
+				Title:       new("Test"),
+				Description: new("Test"),
+			},
+			mockBehavior: func(s *mock_service.MockTodoItem, todoItem model.UpdateItemInput) {
+				s.EXPECT().Update(1, 1, todoItem).Return(errFailedToUpdateItem)
+			},
+			expectedResponseCode: 500,
+			expectedResponseBody: `{"message":"failed to update item"}`,
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			todoItems := mock_service.NewMockTodoItem(c)
+			testCase.mockBehavior(todoItems, testCase.inputItem)
+
+			services := &service.Service{TodoItem: todoItems}
+			handler := NewHandler(services, logger)
+
+			r := gin.New()
+			r.PUT("/api/items/:id", func(c *gin.Context) {
+				c.Set("userId", 1)
+				handler.updateItems(c)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("PUT", testCase.inputURL, bytes.NewBufferString(testCase.inputBody))
+
+			r.ServeHTTP(w, req)
+
+			assert.Equal(t, testCase.expectedResponseCode, w.Code)
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+		})
+	}
+}

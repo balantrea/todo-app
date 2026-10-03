@@ -101,13 +101,13 @@ func (h *Handler) updateItems(c *gin.Context) {
 	var input model.UpdateItemInput
 
 	if err = c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err, h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidInputBody, h.logger)
 		return
 	}
 
 	err = h.service.Update(userId, itemId, input)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err, h.logger)
+		newErrorResponse(c, http.StatusInternalServerError, errFailedToUpdateItem, h.logger)
 		return
 	}
 
