@@ -17,4 +17,5 @@ var (
 	errFailedToGetAllItems   = errors.New("failed to get all items")
 	errFailedToGetItemsByID  = errors.New("failed to get items by id")
 	errFailedToUpdateItem    = errors.New("failed to update item")
+	errFailedToDeleteItem    = errors.New("failed to delete item")
 )

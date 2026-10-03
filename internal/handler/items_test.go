@@ -325,3 +325,68 @@ func TestItems_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestItems_Delete(t *testing.T) {
+	type mockBehavior func(s *mock_service.MockTodoItem)
+
+	testTable := []struct {
+		name                 string
+		inputURL             string
+		mockBehavior         mockBehavior
+		expectedResponseCode int
+		expectedResponseBody string
+	}{
+		{
+			name:     "OK",
+			inputURL: "/api/items/1",
+			mockBehavior: func(s *mock_service.MockTodoItem) {
+				s.EXPECT().Delete(1, 1).Return(nil)
+			},
+			expectedResponseCode: 200,
+			expectedResponseBody: `{"status":"ok"}`,
+		},
+		{
+			name:                 "invalid id param",
+			inputURL:             "/api/items/invalid",
+			mockBehavior:         func(s *mock_service.MockTodoItem) {},
+			expectedResponseCode: 400,
+			expectedResponseBody: `{"message":"invalid id param"}`,
+		},
+		{
+			name:     "failed to delete item",
+			inputURL: "/api/items/1",
+			mockBehavior: func(s *mock_service.MockTodoItem) {
+				s.EXPECT().Delete(1, 1).Return(errFailedToDeleteItem)
+			},
+			expectedResponseCode: 500,
+			expectedResponseBody: `{"message":"failed to delete item"}`,
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			todoItems := mock_service.NewMockTodoItem(c)
+			testCase.mockBehavior(todoItems)
+
+			services := &service.Service{TodoItem: todoItems}
+			handler := NewHandler(services, logger)
+
+			r := gin.New()
+			r.DELETE("/api/items/:id", func(c *gin.Context) {
+				c.Set("userId", 1)
+				handler.deleteItems(c)
+			})
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("DELETE", testCase.inputURL, nil)
+
+			r.ServeHTTP(w, req)
+
+			assert.Equal(t, testCase.expectedResponseCode, w.Code)
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+		})
+	}
+}
