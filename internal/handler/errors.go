@@ -13,4 +13,5 @@ var (
 	errFailedToCreateUser    = errors.New("failed to create user")
 	errFailedToGenerateToken = errors.New("failed to create token")
 	errInvalidToken          = errors.New("invalid token")
+	errFailedToCreateItem    = errors.New("failed to create item")
 )

@@ -23,7 +23,7 @@ func (h *Handler) createItems(c *gin.Context) {
 	var input model.TodoItem
 
 	if err = c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err, h.logger)
+		newErrorResponse(c, http.StatusBadRequest, errInvalidInputBody, h.logger)
 		return
 	}
 
