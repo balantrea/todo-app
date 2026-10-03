@@ -10,6 +10,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/viper v1.21.0
+	github.com/zhashkevych/go-sqlxmock v1.5.1
 	go.uber.org/mock v0.6.0
 )
 
